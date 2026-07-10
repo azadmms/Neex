@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#66b39f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="SkyGate Receipt" />
+
+  <title>SkyGate Sample Receipt</title>
+
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <main class="page">
+    <section class="card controls" id="controls">
+      <p class="eyebrow">SkyGate Technology</p>
+      <h1>Sample Receipt Generator</h1>
+      <p class="intro">
+        Enter the requested amount. The currency is fixed as IQD, and the current
+        date and time are added automatically.
+      </p>
+
+      <label for="amountInput">Amount (IQD)</label>
+      <input
+        id="amountInput"
+        type="number"
+        min="1"
+        step="1"
+        inputmode="numeric"
+        placeholder="Example: 199000"
+        autocomplete="off"
+      />
+
+      <button id="generateBtn" type="button">Submit and show receipt</button>
+      <p id="formMessage" class="message" aria-live="polite"></p>
+    </section>
+
+    <section id="receiptSection" class="receipt-section hidden" aria-live="polite">
+      <article id="receipt" class="receipt">
+        <div class="sample-banner">SAMPLE — NOT A BANK RECEIPT</div>
+
+        <header class="receipt-header">
+          <div class="logo" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <h2>Transaction Receipt</h2>
+        </header>
+
+        <div class="receipt-body">
+          <h3>SkyGate Technology</h3>
+
+          <div class="divider"></div>
+
+          <h4>Transaction Summary</h4>
+          <p id="receiptDate" class="date"></p>
+
+          <div id="receiptAmount" class="amount">0</div>
+          <div class="currency">IQD</div>
+
+          <div class="divider"></div>
+
+          <dl class="details">
+            <div>
+              <dt>Date &amp; Time</dt>
+              <dd id="detailDate"></dd>
+            </div>
+            <div>
+              <dt>Beneficiary Name</dt>
+              <dd>SkyGate Technology</dd>
+            </div>
+            <div>
+              <dt>Amount</dt>
+              <dd id="detailAmount"></dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd class="status">Completed</dd>
+            </div>
+          </dl>
+
+          <p class="disclaimer">
+            This is a computer-generated sample for internal reference only.
+            It is not valid as proof of payment.
+          </p>
+        </div>
+      </article>
+
+      <div class="receipt-actions">
+        <button id="downloadBtn" type="button">Download PNG</button>
+        <button id="printBtn" class="secondary" type="button">Save as PDF / Print</button>
+        <button id="editBtn" class="ghost" type="button">Change amount</button>
+      </div>
+    </section>
+
+    <canvas id="downloadCanvas" width="1080" height="1600" hidden></canvas>
+  </main>
+
+  <script src="./script.js"></script>
+</body>
+</html>

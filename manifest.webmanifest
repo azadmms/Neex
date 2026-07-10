@@ -1,0 +1,18 @@
+{
+  "name": "SkyGate Sample Receipt",
+  "short_name": "SkyGate Receipt",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f2f6f5",
+  "theme_color": "#66b39f",
+  "description": "A clearly marked internal sample receipt generator with fixed IQD currency.",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
