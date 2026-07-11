@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1220" />
+  <title>Neex Iraq | Financial Calculator</title>
+
+  <!-- SheetJS: used only for importing/exporting Excel files -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: #0e1b2d;
+      --panel-2: #13243a;
+      --text: #eef5ff;
+      --muted: #99abc2;
+      --line: #243852;
+      --accent: #24c8a5;
+      --danger: #ff6b6b;
+      --warning: #ffc857;
+      --shadow: 0 18px 50px rgba(0,0,0,.28);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(36,200,165,.12), transparent 28%),
+        linear-gradient(180deg, #07111f 0%, #0a1424 100%);
+      color: var(--text);
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      width: min(1220px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 22px 0 50px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 3vw, 2.2rem);
+    }
+
+    .brand p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    .nav-link, button, .file-button {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .16s ease, opacity .16s ease, background .16s ease;
+    }
+
+    button:hover, .nav-link:hover, .file-button:hover { transform: translateY(-1px); }
+
+    .nav-link {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    .notice {
+      background: rgba(36,200,165,.1);
+      border: 1px solid rgba(36,200,165,.28);
+      color: #d9fff7;
+      padding: 13px 15px;
+      border-radius: 14px;
+      margin-bottom: 18px;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(19,36,58,.96), rgba(14,27,45,.96));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .stat {
+      padding: 16px;
+      min-height: 105px;
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: .84rem;
+      margin-bottom: 10px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: clamp(1.05rem, 2.2vw, 1.55rem);
+      overflow-wrap: anywhere;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .form-card { padding: 18px; position: sticky; top: 14px; }
+
+    h2 {
+      margin: 0 0 16px;
+      font-size: 1.12rem;
+    }
+
+    .field { margin-bottom: 13px; }
+
+    label {
+      display: block;
+      font-size: .86rem;
+      color: var(--muted);
+      margin-bottom: 7px;
+      font-weight: 650;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #091525;
+      color: var(--text);
+      border-radius: 11px;
+      padding: 12px;
+      outline: none;
+      font: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(36,200,165,.12);
+    }
+
+    textarea { min-height: 82px; resize: vertical; }
+
+    .fee-preview {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 10px 0 15px;
+    }
+
+    .fee-box {
+      background: #091525;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      padding: 11px;
+    }
+
+    .fee-box small { color: var(--muted); display: block; }
+    .fee-box strong { margin-top: 5px; display: block; }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .primary { background: var(--accent); color: #04130f; }
+    .secondary { background: #1c3049; color: var(--text); border: 1px solid var(--line); }
+    .danger { background: rgba(255,107,107,.14); color: #ffd9d9; border: 1px solid rgba(255,107,107,.35); }
+
+    .table-card { overflow: hidden; }
+
+    .table-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .toolbar-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .toolbar-group input { width: min(260px, 100%); }
+
+    .file-button {
+      display: inline-flex;
+      align-items: center;
+      background: #1c3049;
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+
+    .file-button input { display: none; }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1050px;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+      font-size: .87rem;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #12223a;
+      color: #dce9f8;
+      z-index: 1;
+    }
+
+    td.number { text-align: right; font-variant-numeric: tabular-nums; }
+    .muted { color: var(--muted); }
+
+    .action-btn {
+      padding: 7px 9px;
+      border-radius: 9px;
+      font-size: .78rem;
+      margin-right: 5px;
+    }
+
+    .empty {
+      padding: 34px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: .8rem;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #10243a;
+      color: white;
+      border: 1px solid var(--line);
+      padding: 12px 15px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: .22s ease;
+      z-index: 99;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 980px) {
+      .dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .main-grid { grid-template-columns: 1fr; }
+      .form-card { position: static; }
+    }
+
+    @media (max-width: 560px) {
+      .container { width: min(100% - 18px, 1220px); padding-top: 12px; }
+      .topbar { align-items: flex-start; }
+      .dashboard { grid-template-columns: 1fr 1fr; }
+      .dashboard .stat:first-child { grid-column: 1 / -1; }
+      .button-row { grid-template-columns: 1fr; }
+      .table-toolbar { align-items: stretch; }
+      .toolbar-group, .toolbar-group > * { width: 100%; }
+      .toolbar-group input { width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Financial Calculator</h1>
+        <p>Neex Iraq Local Deposit Operations</p>
+      </div>
+      <a class="nav-link" href="index.html">← Receipt Generator</a>
+    </header>
+
+    <div class="notice">
+      Deposit and withdrawal fees are fixed at <strong>1.5%</strong>. All values are stored locally in this browser.
+    </div>
+
+    <section class="dashboard">
+      <div class="card stat"><span>Current Balance</span><strong id="currentBalance">0.00</strong></div>
+      <div class="card stat"><span>Total Deposits</span><strong id="totalDeposits">0.00</strong></div>
+      <div class="card stat"><span>Total Withdrawals</span><strong id="totalWithdrawals">0.00</strong></div>
+      <div class="card stat"><span>Deposit Fees</span><strong id="totalDepositFees">0.00</strong></div>
+      <div class="card stat"><span>Withdrawal Fees</span><strong id="totalWithdrawalFees">0.00</strong></div>
+    </section>
+
+    <main class="main-grid">
+      <section class="card form-card">
+        <h2 id="formTitle">Add Transaction</h2>
+
+        <form id="transactionForm">
+          <input type="hidden" id="editId" />
+
+          <div class="field">
+            <label for="date">Date</label>
+            <input id="date" type="date" required />
+          </div>
+
+          <div class="field">
+            <label for="reference">Order / Reference Number</label>
+            <input id="reference" type="text" placeholder="Example: Deposit, Acc: 1302936" required />
+          </div>
+
+          <div class="field">
+            <label for="deposit">Deposit Amount</label>
+            <input id="deposit" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+
+          <div class="field">
+            <label for="withdrawal">Withdrawal Amount</label>
+            <input id="withdrawal" type="number" min="0" step="0.01" placeholder="0.00" />
+          </div>
+
+          <div class="fee-preview">
+            <div class="fee-box">
+              <small>Deposit fee (1.5%)</small>
+              <strong id="depositFeePreview">0.00</strong>
+            </div>
+            <div class="fee-box">
+              <small>Withdrawal fee (1.5%)</small>
+              <strong id="withdrawalFeePreview">0.00</strong>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="remarks">Remarks</label>
+            <textarea id="remarks" placeholder="Optional notes"></textarea>
+          </div>
+
+          <div class="button-row">
+            <button class="primary" type="submit">Save Transaction</button>
+            <button class="secondary" type="button" id="clearBtn">Clear Form</button>
+          </div>
+        </form>
+
+        <p class="footer-note">
+          A transaction may contain a deposit, a withdrawal, or both. The running balance is recalculated automatically after every save, edit, delete, or import.
+        </p>
+      </section>
+
+      <section class="card table-card">
+        <div class="table-toolbar">
+          <div class="toolbar-group">
+            <input id="searchInput" type="search" placeholder="Search reference or remarks..." />
+          </div>
+
+          <div class="toolbar-group">
+            <label class="file-button">
+              Import Excel
+              <input id="excelInput" type="file" accept=".xlsx,.xls" />
+            </label>
+            <button class="secondary" id="exportBtn" type="button">Download Excel</button>
+            <button class="danger" id="clearAllBtn" type="button">Delete All</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Order / Reference Number</th>
+                <th>Deposit Amount</th>
+                <th>Deposit Fee (1.5%)</th>
+                <th>Withdrawal Amount</th>
+                <th>Withdrawal Fee (1.5%)</th>
+                <th>Balance</th>
+                <th>Remarks</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="transactionBody"></tbody>
+          </table>
+          <div id="emptyState" class="empty">No saved transactions yet.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const STORAGE_KEY = "neex_iraq_finance_transactions_v1";
+    const FIXED_FEE_RATE = 0.015;
+
+    const form = document.getElementById("transactionForm");
+    const dateInput = document.getElementById("date");
+    const referenceInput = document.getElementById("reference");
+    const depositInput = document.getElementById("deposit");
+    const withdrawalInput = document.getElementById("withdrawal");
+    const remarksInput = document.getElementById("remarks");
+    const editIdInput = document.getElementById("editId");
+    const body = document.getElementById("transactionBody");
+    const emptyState = document.getElementById("emptyState");
+    const searchInput = document.getElementById("searchInput");
+
+    let transactions = loadTransactions();
+
+    function todayISO() {
+      const now = new Date();
+      const offset = now.getTimezoneOffset();
+      return new Date(now.getTime() - offset * 60000).toISOString().slice(0, 10);
+    }
+
+    function toNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function round2(value) {
+      return Math.round((value + Number.EPSILON) * 100) / 100;
+    }
+
+    function formatNumber(value) {
+      return toNumber(value).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function normalizeDate(value) {
+      if (!value) return todayISO();
+
+      if (value instanceof Date && !isNaN(value)) {
+        const y = value.getFullYear();
+        const m = String(value.getMonth() + 1).padStart(2, "0");
+        const d = String(value.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+      if (typeof value === "number" && window.XLSX) {
+        const parsed = XLSX.SSF.parse_date_code(value);
+        if (parsed) {
+          return `${parsed.y}-${String(parsed.m).padStart(2, "0")}-${String(parsed.d).padStart(2, "0")}`;
+        }
+      }
+
+      const text = String(value).trim();
+      const asDate = new Date(text);
+      if (!isNaN(asDate)) return normalizeDate(asDate);
+      return todayISO();
+    }
+
+    function loadTransactions() {
+      try {
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveTransactions() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+    }
+
+    function calculateRows(items) {
+      let balance = 0;
+      return [...items]
+        .sort((a, b) => {
+          const dateCompare = a.date.localeCompare(b.date);
+          if (dateCompare !== 0) return dateCompare;
+          return (a.createdAt || 0) - (b.createdAt || 0);
+        })
+        .map(item => {
+          const deposit = round2(toNumber(item.deposit));
+          const withdrawal = round2(toNumber(item.withdrawal));
+          const depositFee = round2(deposit * FIXED_FEE_RATE);
+          const withdrawalFee = round2(withdrawal * FIXED_FEE_RATE);
+          balance = round2(balance + deposit - depositFee - withdrawal - withdrawalFee);
+
+          return {
+            ...item,
+            deposit,
+            withdrawal,
+            depositFee,
+            withdrawalFee,
+            balance
+          };
+        });
+    }
+
+    function render() {
+      const calculated = calculateRows(transactions);
+      const query = searchInput.value.trim().toLowerCase();
+
+      const filtered = calculated.filter(row =>
+        !query ||
+        row.reference.toLowerCase().includes(query) ||
+        (row.remarks || "").toLowerCase().includes(query) ||
+        row.date.includes(query)
+      );
+
+      body.innerHTML = filtered.map(row => `
+        <tr>
+          <td>${escapeHtml(row.date)}</td>
+          <td>${escapeHtml(row.reference)}</td>
+          <td class="number">${row.deposit ? formatNumber(row.deposit) : ""}</td>
+          <td class="number">${row.depositFee ? formatNumber(row.depositFee) : ""}</td>
+          <td class="number">${row.withdrawal ? formatNumber(row.withdrawal) : ""}</td>
+          <td class="number">${row.withdrawalFee ? formatNumber(row.withdrawalFee) : ""}</td>
+          <td class="number"><strong>${formatNumber(row.balance)}</strong></td>
+          <td>${escapeHtml(row.remarks || "")}</td>
+          <td>
+            <button class="secondary action-btn" onclick="editTransaction('${row.id}')">Edit</button>
+            <button class="danger action-btn" onclick="deleteTransaction('${row.id}')">Delete</button>
+          </td>
+        </tr>
+      `).join("");
+
+      emptyState.style.display = filtered.length ? "none" : "block";
+      updateDashboard(calculated);
+    }
+
+    function updateDashboard(rows) {
+      const totals = rows.reduce((sum, row) => {
+        sum.deposits += row.deposit;
+        sum.withdrawals += row.withdrawal;
+        sum.depositFees += row.depositFee;
+        sum.withdrawalFees += row.withdrawalFee;
+        return sum;
+      }, { deposits: 0, withdrawals: 0, depositFees: 0, withdrawalFees: 0 });
+
+      document.getElementById("currentBalance").textContent =
+        formatNumber(rows.length ? rows[rows.length - 1].balance : 0);
+      document.getElementById("totalDeposits").textContent = formatNumber(totals.deposits);
+      document.getElementById("totalWithdrawals").textContent = formatNumber(totals.withdrawals);
+      document.getElementById("totalDepositFees").textContent = formatNumber(totals.depositFees);
+      document.getElementById("totalWithdrawalFees").textContent = formatNumber(totals.withdrawalFees);
+    }
+
+    function updateFeePreview() {
+      document.getElementById("depositFeePreview").textContent =
+        formatNumber(toNumber(depositInput.value) * FIXED_FEE_RATE);
+      document.getElementById("withdrawalFeePreview").textContent =
+        formatNumber(toNumber(withdrawalInput.value) * FIXED_FEE_RATE);
+    }
+
+    function clearForm() {
+      form.reset();
+      editIdInput.value = "";
+      dateInput.value = todayISO();
+      document.getElementById("formTitle").textContent = "Add Transaction";
+      updateFeePreview();
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+
+      const deposit = toNumber(depositInput.value);
+      const withdrawal = toNumber(withdrawalInput.value);
+
+      if (deposit <= 0 && withdrawal <= 0) {
+        alert("Enter a deposit amount, a withdrawal amount, or both.");
+        return;
+      }
+
+      const existingId = editIdInput.value;
+      const record = {
+        id: existingId || crypto.randomUUID(),
+        date: dateInput.value,
+        reference: referenceInput.value.trim(),
+        deposit,
+        withdrawal,
+        remarks: remarksInput.value.trim(),
+        createdAt: existingId
+          ? (transactions.find(t => t.id === existingId)?.createdAt || Date.now())
+          : Date.now()
+      };
+
+      if (existingId) {
+        transactions = transactions.map(item => item.id === existingId ? record : item);
+        showToast("Transaction updated.");
+      } else {
+        transactions.push(record);
+        showToast("Transaction saved.");
+      }
+
+      saveTransactions();
+      clearForm();
+      render();
+    });
+
+    function editTransaction(id) {
+      const item = transactions.find(row => row.id === id);
+      if (!item) return;
+
+      editIdInput.value = item.id;
+      dateInput.value = item.date;
+      referenceInput.value = item.reference;
+      depositInput.value = item.deposit || "";
+      withdrawalInput.value = item.withdrawal || "";
+      remarksInput.value = item.remarks || "";
+      document.getElementById("formTitle").textContent = "Edit Transaction";
+      updateFeePreview();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function deleteTransaction(id) {
+      if (!confirm("Delete this transaction?")) return;
+      transactions = transactions.filter(row => row.id !== id);
+      saveTransactions();
+      render();
+      showToast("Transaction deleted.");
+    }
+
+    document.getElementById("clearBtn").addEventListener("click", clearForm);
+    depositInput.addEventListener("input", updateFeePreview);
+    withdrawalInput.addEventListener("input", updateFeePreview);
+    searchInput.addEventListener("input", render);
+
+    document.getElementById("clearAllBtn").addEventListener("click", () => {
+      if (!transactions.length) return;
+      if (!confirm("Delete all saved transactions from this browser?")) return;
+      transactions = [];
+      saveTransactions();
+      clearForm();
+      render();
+      showToast("All transactions deleted.");
+    });
+
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      if (!window.XLSX) {
+        alert("Excel library could not load. Check your internet connection and reload the page.");
+        return;
+      }
+
+      const rows = calculateRows(transactions);
+      const exportRows = rows.map(row => ({
+        "Date": row.date,
+        "Order/Reference Number": row.reference,
+        "Deposit Amount": row.deposit || null,
+        "Deposit Fee Charged (1.5%)": row.depositFee || null,
+        "Withdrawal Amount": row.withdrawal || null,
+        "Withdrawal Fee Charged (1.5%)": row.withdrawalFee || null,
+        "Balance": row.balance,
+        "Remarks": row.remarks || ""
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportRows, {
+        header: [
+          "Date",
+          "Order/Reference Number",
+          "Deposit Amount",
+          "Deposit Fee Charged (1.5%)",
+          "Withdrawal Amount",
+          "Withdrawal Fee Charged (1.5%)",
+          "Balance",
+          "Remarks"
+        ]
+      });
+
+      worksheet["!cols"] = [
+        { wch: 13 }, { wch: 30 }, { wch: 16 }, { wch: 25 },
+        { wch: 18 }, { wch: 28 }, { wch: 16 }, { wch: 28 }
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+      XLSX.writeFile(workbook, `Iraq_LD_Daily_Balance_${todayISO()}.xlsx`);
+      showToast("Excel file downloaded.");
+    });
+
+    document.getElementById("excelInput").addEventListener("change", async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!window.XLSX) {
+        alert("Excel library could not load. Check your internet connection and reload the page.");
+        return;
+      }
+
+      try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type: "array", cellDates: true });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+        const imported = rows
+          .filter(row => row["Date"] || row["Order/Reference Number"])
+          .map((row, index) => ({
+            id: crypto.randomUUID(),
+            date: normalizeDate(row["Date"]),
+            reference: String(row["Order/Reference Number"] || "").trim(),
+            deposit: toNumber(row["Deposit Amount"]),
+            withdrawal: toNumber(row["Withdrawal Amount"]),
+            remarks: String(row["Remarks"] || "").trim(),
+            createdAt: Date.now() + index
+          }))
+          .filter(row => row.reference || row.deposit || row.withdrawal);
+
+        if (!imported.length) {
+          alert("No compatible transaction rows were found in the Excel file.");
+          return;
+        }
+
+        const replace = confirm(
+          `Found ${imported.length} transaction(s).\n\nPress OK to replace current data.\nPress Cancel to add them to current data.`
+        );
+
+        transactions = replace ? imported : [...transactions, ...imported];
+        saveTransactions();
+        render();
+        showToast(`${imported.length} transaction(s) imported.`);
+      } catch (error) {
+        console.error(error);
+        alert("The Excel file could not be imported. Confirm that its first sheet uses the same column names.");
+      } finally {
+        event.target.value = "";
+      }
+    });
+
+    window.editTransaction = editTransaction;
+    window.deleteTransaction = deleteTransaction;
+
+    dateInput.value = todayISO();
+    updateFeePreview();
+    render();
+  </script>
+</body>
+</html>
